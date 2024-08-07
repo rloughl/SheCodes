@@ -1,0 +1,172 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="src/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>Vanilla Weather App</title>
+  </head>
+  <body>
+    <div class="vanilla-app">
+      <header>
+        <form class="search-form" id="search-form">
+          <input
+            type="search"
+            placeholder="Enter a city.."
+            required
+            id="search-form-input"
+            class="search-form-input"
+          />
+          <input type="submit" value="search" class="search-form-button" />
+        </form>
+      </header>
+      <main>
+        <div class="vanilla-app-data">
+          <div>
+            <h1 class="vanilla-app-city" id="city"></h1>
+            <p class="vanilla-app-details">
+              <span id="time"></span>
+              <span id="description"></span>
+
+              <br />
+              Humidity: <strong id="humidity"></strong>, Wind:
+              <strong id="wind-speed">3.13km/h</strong>
+            </p>
+          </div>
+          <div class="vanilla-app-temperature-container">
+            <div id="icon"></div>
+            <div class="vanilla-app-temperature" id="temperature"></div>
+            <div class="vanilla-app-unit">°C</div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="forecast"></div>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+      </main>
+
+      <footer>
+        <p>
+          This project was coded by
+          <a href="https://github.com/Sadia-AB" target="_blank">Sadia</a> and is
+          <a href="https://github.com/Sadia-AB/vanilla-weather" target="_blank">
+            open-sourced on GitHub</a
+          >
+          and
+          <a href="https://app.netlify.com/teams/sadia-ab" target="_blank"
+            >hosted on Netlify</a
+          >
+        </p>
+      </footer>
+    </div>
+    <script src="src/index.js"></script>
+  </body>
+</html>let temperatureElement = document.querySelector("#temperature");
+  let temperature = response.data.temperature.current;
+  let cityElement = document.querySelector("#city");
+  let descriptionElement = document.querySelector("#description");
+  let humidityElement = document.querySelector("#humidity");
+  let windSpeedElement = document.querySelector("#wind-speed");
+  let timeElement = document.querySelector("#time");
+  let date = new Date(response.data.time * 1000);
+  let iconElement = document.querySelector("#icon");
+
+  console.log(response.data.condition.description);
+
+  cityElement.innerHTML = response.data.city;
+  timeElement.innerHTML = formatDate(date);
+  descriptionElement.innerHTML = response.data.condition.description;
+  humidityElement.innerHTML = `${response.data.temperature.humidity}%`;
+  windSpeedElement.innerHTML = `${response.data.wind.speed}km/h`;
+  temperatureElement.innerHTML = Math.round(temperature);
+  iconElement.innerHTML = `<img src="${response.data.condition.icon_url}" class="vanilla-app-icon"/>`;
+
+  getForecast(response.data.city);
+}
+
+function formatDate(date) {
+  let minutes = date.getMinutes();
+  let hours = date.getHours();
+  let days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  let day = days[date.getDay()];
+
+  if (minutes < 10) {
+    minutes = `0${minutes}`;
+  }
+  return `${day} ${hours}:${minutes}`;
+}
+
+function searchCity(city) {
+  let apiKey = "192135tc4e4o0fafb44cb21e060f9cef";
+  let apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
+  axios.get(apiUrl).then(refreshWeather);
+}
+
+function handleSearchSubmit(event) {
+  event.preventDefault();
+  let searchInput = document.querySelector("#search-form-input");
+
+  searchCity(searchInput.value);
+}
+function formatDay(timestamp) {
+  let date = new Date(timestamp * 1000);
+  let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return days[date.getDay()];
+}
+
+function getForecast(city) {
+  let apiKey = "192135tc4e4o0fafb44cb21e060f9cef";
+  let apiUrl = `https://api.shecodes.io/weather/v1/forecast?query=${city}&key=${apiKey}&units=metric`;
+  axios.get(apiUrl).then(displayForecast);
+}
+function displayForecast(response) {
+  console.log(response.data);
+
+  let forecastHtml = "";
+
+  response.data.daily.forEach(function (day, index) {
+    if (index < 5)
+      forecastHtml += ` 
+          <div class="weather-forecast-day">
+            <div class="weather-forecast-date">${formatDay(day.time)}</div>
+            
+            <img src="${
+              day.condition.icon_url
+            }" class= "weather-forecast-icon"/>
+            
+            <div class="weather-forecast-temperatures">
+              <div class="weather-forecast-temperature">
+                <strong>${Math.round(day.temperature.maximum)}°</strong>
+              </div>
+              <div class="weather-forecast-temperature">${Math.round(
+                day.temperature.minimum
+              )}°</div>
+            </div>
+          </div>
+    `;
+  });
+
+  let forecastElement = document.querySelector("#forecast");
+  forecastElement.innerHTML = forecastHtml;
+}
+
+let searchFormElement = document.querySelector("#search-form");
+searchFormElement.addEventListener("submit", handleSearchSubmit);
+searchCity("Paris");
